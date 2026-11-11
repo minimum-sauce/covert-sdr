@@ -2,7 +2,7 @@
 import numpy as np
 import adi
 from scipy.signal import firwin, lfilter
-from common.config import CENTER_FREQUENCY, SDR1_IP
+from common.config import FC, SDR1_IP
 
 # --- local settings ---
 SDR_IP  = SDR1_IP
@@ -23,7 +23,7 @@ samples = samples / np.max(np.abs(samples)) * 2**14 * 0.5
 
 # --- SDR ---
 sdr = adi.Pluto(uri=f"ip:{SDR_IP}")   # or adi.ad9361(...) if this fails
-sdr.tx_lo = int(CENTER_FREQUENCY)
+sdr.tx_lo = int(FC)
 sdr.sample_rate = FS
 sdr.tx_rf_bandwidth = FS
 sdr.tx_hardwaregain_chan0 = TX_GAIN
