@@ -5,3 +5,9 @@ version = "0.1.0"
 [tool.setuptools.packages.find]
 where = ["sw/python"]
 include = ["common*", "alice*", "bob*", "willie*"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["sw/python/tests"]
