@@ -1,0 +1,7 @@
+[project]
+name = "covert-sdr"
+version = "0.1.0"
+
+[tool.setuptools.packages.find]
+where = ["sw/python"]
+include = ["common*", "alice*", "bob*", "willie*"]
