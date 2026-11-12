@@ -1,8 +1,8 @@
 from common.rrc import rrc_taps
 
 ## SDR IP addresses
-SDR1_IP = "ip:192.168.1.10"
-SDR2_IP = "ip:192.168.2.1"
+SDR1_IP = "192.168.1.10"
+SDR2_IP = "192.168.2.1"
 
 ## TX and RX common parameters
 FS = int(1e6)
@@ -17,4 +17,9 @@ RRC_SPAN      = 10
 
 PREAMBLE_LEN  = 64           # symbols
 PREAMBLE_SEED = 1234         # Seed 
-MAX_PAYLOAD_BYTES  = 128       
+PAYLOAD_BITS  = 1024         # Bits to send
+
+# Counts how many bytes can be sent.
+HEADER_BITS = 8
+MAX_PAYLOAD_BYTES = 128
+
