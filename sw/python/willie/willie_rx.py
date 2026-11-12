@@ -2,7 +2,7 @@ import numpy as np
 import adi
 from common.config import SDR2_IP, FC
 
-N = 100000     # Number of samples
+N = 100000 # Number of samples
 
 # Setup Willie SDR
 def setup_willie():
@@ -24,7 +24,7 @@ def measure_power(sdr):
     return np.mean(np.abs(samples)**2)
 
 # Calibrate the average noise power and set detection threshold
-def calibrate(sdr, n=50, k=2):
+def calibrate(sdr, n=50, k=4):
     # Measure the noise power and calculate the threshold
     noise = [measure_power(sdr) for _ in range(n)]
     threshold = np.mean(noise) + k * np.std(noise)
