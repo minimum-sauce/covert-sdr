@@ -5,7 +5,7 @@ import adi
 from common.config import *
 from common.rrc import rrc_taps, matched_filter
 from common.modulation import modulate, demodulate
-from common.dsp import preamble_bits
+from common.dsp import preamble_bits, bits_to_int
 
 
 class sdrRx:
@@ -81,18 +81,18 @@ class sdrRx:
         header = self._symbols(filtered, start, PREAMBLE_LEN, HEADER_BITS) * rotation
 
         header_bits = demodulate(header, MODULATION)
-        length_bytes = int("".join(map(str, header_bits.astype(int))), 2)
+        payload_length_bytes = bits_to_int(header_bits)
 
-        if not 0 < length_bytes <= MAX_PAYLOAD_BYTES:
+        if payload_length_bytes > MAX_PAYLOAD_BYTES or payload_length_bytes == 0:
             return None
 
-        payload_length = 8 * length_bytes
+        payload_length_bits = 8 * payload_length_bytes
         payload_start = PREAMBLE_LEN + HEADER_BITS
 
-        if start + (payload_start + payload_length - 1) * self.sps >= len(filtered):
+        if start + (payload_start + payload_length_bits - 1) * self.sps >= len(filtered):
             return None
 
-        payload = self._symbols(filtered, start, payload_start, payload_length) * rotation
+        payload = self._symbols(filtered, start, payload_start, payload_length_bits) * rotation
 
         return demodulate(payload, MODULATION)
 
@@ -100,18 +100,19 @@ class sdrRx:
         filtered = matched_filter(window - np.mean(window), self.taps)
         start = self._find_preamble(filtered)
 
-        return None if start is None else self._decode_frame(filtered, start)
+        if start is None:
+            return None
+        
+        return self._decode_frame(filtered, start)
 
-    def listen(self, max_reads=None):
+    def listen(self):
         window = np.array([], dtype=complex)
-        reads = 0
 
-        while max_reads is None or reads < max_reads:
+        while True:
             window = np.concatenate((window, self._read()))[-self.max_samples:]
-            reads += 1
-
             bits = self._process(window)
+            
             if bits is not None:
                 return bits
 
-        return None
+
