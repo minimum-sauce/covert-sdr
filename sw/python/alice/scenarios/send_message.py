@@ -1,9 +1,9 @@
-from alice.settings import FS
+from common.config import FS
 from alice.framing import text_to_bits, build_packet
 from alice.tx_chain import to_samples
 from alice.runner import transmit
 
-MESSAGE = "hello"
+MESSAGE = "FortniteDavis"
 CYCLIC  = True
 
 def main():
