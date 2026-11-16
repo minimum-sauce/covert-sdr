@@ -1,5 +1,5 @@
-#FS          = 1_000_000       # Sampling frequency
-TX_GAIN     = -10             # Gain when transmitting
+FS          = 1_000_000       # Sampling frequency
+TX_GAIN     = -20             # Gain when transmitting
 RRC_SPAN    = 10              # filter length in symbols
-DAC_SCALE   = 2**12 * 0.5     # digital amplitude, headroom below full scale
+DAC_SCALE   = 2**14 * 0.5     # digital amplitude, headroom below full scale
 GAP_SYMBOLS = 0              # default silence around a packet

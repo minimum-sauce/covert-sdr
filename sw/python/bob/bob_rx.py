@@ -12,7 +12,8 @@ def main():
     with sdrRx() as bob:
         while True:
             bits = bob.listen()
-            print("Received message:", bits_to_text(bits))
+            if bits is not None:
+                print("Received message:", bits_to_text(bits), flush=True)
 
 
 if __name__ == "__main__":
