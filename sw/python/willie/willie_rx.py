@@ -1,35 +1,35 @@
 import numpy as np
 import adi
-from common.config import SDR2_IP, FC
+from common.config import FS, SDR2_IP, FC
 
-N = 100000 # Number of samples
+N = 100000  # Default samples per power measurement
 
-# Setup Willie SDR
-def setup_willie():
-    sdr = adi.ad9361(SDR2_IP)
-    #sdr.sample_rate = int(FS) # Set the sample rate
-    sdr.rx_lo = FC # Set the carrier frequency
-    #sdr.rx_rf_bandwidth = int(FS) # Set the RF bandwidth
-    #sdr.rx_enabled_channels = [0]  # Enable channel 1
-    sdr.rx_buffer_size = N  # Set the buffer size to return one measurement per call
-    sdr.gain_control_mode_chan0 = "manual" # Set gain control to manual to not miss transmissions
-    sdr.rx_hardwaregain_chan0 = 40
+def setup_willie(sdr=None, uri=None, buffer_size=N, rx_gain=20):
+    if sdr is None:
+        sdr = adi.ad9361(uri=uri or f"ip:{SDR2_IP}")
 
+    sdr.sample_rate = FS
+    sdr.rx_lo = FC
+    sdr.rx_rf_bandwidth = int(2e6)
+    sdr.rx_enabled_channels = [0]
+    sdr.rx_buffer_size = buffer_size
+    sdr.rx_cyclic_buffer = False
+    sdr.gain_control_mode_chan0 = "manual"
+    sdr.rx_hardwaregain_chan0 = rx_gain
     return sdr
 
-# Measure the power of the received signal
+
 def measure_power(sdr):
-    samples = sdr.rx()
+    samples = np.asarray(sdr.rx(), dtype=complex)
+    if samples.ndim > 1:
+        samples = samples[0]
+    return float(np.mean(np.abs(samples) ** 2))
 
-    return np.mean(np.abs(samples)**2)
 
-# Calibrate the average noise power and set detection threshold
 def calibrate(sdr, n=50, k=4):
-    # Measure the noise power and calculate the threshold
     noise = [measure_power(sdr) for _ in range(n)]
-    threshold = np.mean(noise) + k * np.std(noise)
+    return float(np.mean(noise) + k * np.std(noise))
 
-    return threshold
 
-# Check if a signal can be detected
-def detect(sdr, threshold): return bool(measure_power(sdr) > threshold)
+def detect(sdr, threshold):
+    return measure_power(sdr) > threshold

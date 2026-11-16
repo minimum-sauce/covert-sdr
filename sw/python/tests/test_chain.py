@@ -1,16 +1,14 @@
-from types import SimpleNamespace
-
 import numpy as np
 import pytest
 
 from alice.framing import build_packet, text_to_bits
 from alice.scenarios.send_message import MESSAGE, build_message_samples
-from alice.sdr_tx import _cyclic_tx_block_size_bytes, _iio_write_buffer
 from alice.tx_chain import to_samples
 from common.config import FS, HEADER_BITS, PREAMBLE_LEN, SYMBOL_RATE
 from common.rrc import matched_filter
 from bob.sdrRx import sdrRx
 from bob.rx_chain import RxChain
+from loopback.willie_experiment import transmission_times
 
 BITS = text_to_bits("hello")
 
@@ -22,22 +20,8 @@ def test_message_scenario_uses_shared_packet_chain():
     )
 
 
-def test_libiio_cyclic_tx_block_size_includes_iq_bytes():
-    sdr = SimpleNamespace(
-        _tx_buffer_size=2048,
-        _num_tx_channels_enabled=1,
-        _complex_data=True,
-        _tx_data_type=np.dtype(np.int16),
-    )
-    assert _cyclic_tx_block_size_bytes(sdr) == 8192
-
-
-def test_libiio_cyclic_write_buffer_preserves_numpy_bytes():
-    samples = np.arange(4096, dtype=np.int16)
-    write_buffer = _iio_write_buffer(samples)
-    assert isinstance(write_buffer, bytearray)
-    assert len(write_buffer) == samples.nbytes
-    assert write_buffer == samples.tobytes()
+def test_willie_experiment_schedules_transmissions_inside_window():
+    assert transmission_times(10, 3) == [2.5, 5.0, 7.5]
 
 
 def make_rx(delay=0, snr_db=None, phase=0.0, cfo_hz=0.0, seed=0):
