@@ -17,15 +17,18 @@ class sdrRx:
         self.preamble = modulate(preamble_bits(), MODULATION)
         self.sdr = None
         self.max_samples = 2 * buffer_size
+        
 
     def setup(self):
         self.sdr = adi.ad9361(uri=self.uri)
         self.sdr.sample_rate = FS
         self.sdr.rx_lo = FC
-        self.sdr.rx_rf_bandwidth = int(2e6)
+        self.sdr.rx_rf_bandwidth = int(1e6)
         self.sdr.rx_enabled_channels = [0]
         self.sdr.rx_buffer_size = self.buffer_size
         self.sdr.rx_cyclic_buffer = False
+        self.sdr.gain_control_mode_chan0 = "manual"
+        self.sdr.rx_hardwaregain_chan0 = 30
         return self
 
     def close(self):
@@ -60,7 +63,7 @@ class sdrRx:
             if metric[peak] > best_metric:
                 best_metric = metric[peak]
                 best_start = phase + peak * self.sps
-
+            
         return best_start if best_metric >= 0.6 else None
 
     def _symbols(self, filtered, start, first, count):
@@ -77,15 +80,18 @@ class sdrRx:
         preamble = self._symbols(filtered, start, 0, PREAMBLE_LEN)
         phase = np.angle(np.sum(preamble * np.conj(self.preamble)))
         rotation = np.exp(-1j * phase)
-
+       
         header = self._symbols(filtered, start, PREAMBLE_LEN, HEADER_BITS) * rotation
 
         header_bits = demodulate(header, MODULATION)
         payload_length_bytes = bits_to_int(header_bits)
+        
+        print("Header bits:", header_bits)
+        print("Payload length:", payload_length_bytes)
 
         if payload_length_bytes > MAX_PAYLOAD_BYTES or payload_length_bytes == 0:
             return None
-
+        
         payload_length_bits = 8 * payload_length_bytes
         payload_start = PREAMBLE_LEN + HEADER_BITS
 
