@@ -1,12 +1,12 @@
-
 import numpy as np
 import adi
 
 from common.config import *
-from common.rrc import rrc_taps, matched_filter
-from common.modulation import modulate, demodulate
-from common.dsp import preamble_bits, bits_to_int
-
+from common.rrc import rrc_taps
+from common.modulation import modulate
+from common.dsp import preamble_bits
+from bob.rxChain import process
+from bob.helper import read_samples
 
 class sdrRx:
     def __init__(self, uri=SDR2_IP, buffer_size=65536):
@@ -42,81 +42,13 @@ class sdrRx:
     def __exit__(self, *exc):
         self.close()
 
-    def _read(self):
-        samples = np.asarray(self.sdr.rx(), dtype=complex)
-        return samples[0] if samples.ndim > 1 else samples
-
-    def _find_preamble(self, filtered):
-        best_metric, best_start = 0, None
-
-        for phase in range(self.sps):
-            symbols = filtered[phase::self.sps]
-
-            if len(symbols) < PREAMBLE_LEN:
-                continue
-
-            corr = np.correlate(symbols, self.preamble, mode="valid")
-            energy = np.convolve(np.abs(symbols) ** 2, np.ones(PREAMBLE_LEN), mode="valid")
-            metric = np.abs(corr) / (np.sqrt(energy * PREAMBLE_LEN) + 1e-12)
-            peak = np.argmax(metric)
-
-            if metric[peak] > best_metric:
-                best_metric = metric[peak]
-                best_start = phase + peak * self.sps
-            
-        return best_start if best_metric >= 0.6 else None
-
-    def _symbols(self, filtered, start, first, count):
-        indices = start + (first + np.arange(count)) * self.sps
-        return filtered[indices]
-
-    def _decode_frame(self, filtered, start):
-        header_start = start + PREAMBLE_LEN * self.sps
-        header_end = header_start + HEADER_BITS * self.sps
-
-        if header_end > len(filtered):
-            return None
-
-        preamble = self._symbols(filtered, start, 0, PREAMBLE_LEN)
-        phase = np.angle(np.sum(preamble * np.conj(self.preamble)))
-        rotation = np.exp(-1j * phase)
-       
-        header = self._symbols(filtered, start, PREAMBLE_LEN, HEADER_BITS) * rotation
-
-        header_bits = demodulate(header, MODULATION)
-        payload_length_bytes = bits_to_int(header_bits)
-        
-        print("Header bits:", header_bits)
-        print("Payload length:", payload_length_bytes)
-
-        if payload_length_bytes > MAX_PAYLOAD_BYTES or payload_length_bytes == 0:
-            return None
-        
-        payload_length_bits = 8 * payload_length_bytes
-        payload_start = PREAMBLE_LEN + HEADER_BITS
-
-        if start + (payload_start + payload_length_bits - 1) * self.sps >= len(filtered):
-            return None
-
-        payload = self._symbols(filtered, start, payload_start, payload_length_bits) * rotation
-
-        return demodulate(payload, MODULATION)
-
-    def _process(self, window):
-        filtered = matched_filter(window - np.mean(window), self.taps)
-        start = self._find_preamble(filtered)
-
-        if start is None:
-            return None
-        
-        return self._decode_frame(filtered, start)
 
     def listen(self):
         window = np.array([], dtype=complex)
 
         while True:
-            window = np.concatenate((window, self._read()))[-self.max_samples:]
-            bits = self._process(window)
+            window = np.concatenate((window, read_samples(self.sdr)))[-self.max_samples:]
+            bits = process(self, window)
             
             if bits is not None:
                 return bits
