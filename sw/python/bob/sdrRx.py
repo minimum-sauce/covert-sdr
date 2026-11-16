@@ -9,7 +9,7 @@ from bob.rxChain import process
 from bob.helper import read_samples
 
 class sdrRx:
-    def __init__(self, uri=SDR2_IP, buffer_size=65536):
+    def init(self, uri=SDR2_IP, buffer_size=65536):
         self.uri = uri
         self.buffer_size = buffer_size
         self.sps = FS // SYMBOL_RATE
@@ -17,7 +17,7 @@ class sdrRx:
         self.preamble = modulate(preamble_bits(), MODULATION)
         self.sdr = None
         self.max_samples = 2 * buffer_size
-        
+
 
     def setup(self):
         self.sdr = adi.ad9361(uri=self.uri)
@@ -36,10 +36,10 @@ class sdrRx:
             self.sdr.rx_destroy_buffer()
             self.sdr = None
 
-    def __enter__(self):
+    def enter(self):
         return self.setup()
 
-    def __exit__(self, *exc):
+    def exit(self, *exc):
         self.close()
 
 
@@ -49,8 +49,6 @@ class sdrRx:
         while True:
             window = np.concatenate((window, read_samples(self.sdr)))[-self.max_samples:]
             bits = process(self, window)
-            
+
             if bits is not None:
                 return bits
-
-

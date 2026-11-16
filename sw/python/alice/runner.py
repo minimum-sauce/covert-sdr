@@ -1,7 +1,7 @@
 import time
 import numpy as np
-from common.config import SDR1_IP, FC
-from alice.settings import FS, TX_GAIN
+from common.config import SDR1_IP, FC, FS
+from alice.settings import TX_GAIN
 from alice.sdr_tx import SdrTx
 
 def transmit(samples: np.ndarray, cyclic: bool = True):

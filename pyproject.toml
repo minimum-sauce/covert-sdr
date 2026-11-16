@@ -4,7 +4,7 @@ version = "0.1.0"
 
 [tool.setuptools.packages.find]
 where = ["sw/python"]
-include = ["common*", "alice*", "bob*", "willie*"]
+include = ["common*", "alice*", "bob*", "willie*", "loopback*"]
 
 [project.optional-dependencies]
 dev = ["pytest"]
