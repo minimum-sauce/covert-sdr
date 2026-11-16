@@ -16,8 +16,7 @@ class sdrRx:
         self.taps = rrc_taps(ROLLOFF, RRC_SPAN, self.sps)
         self.preamble = modulate(preamble_bits(), MODULATION)
         self.sdr = None
-        self.max_samples = 2 * buffer_size
-        
+        self.max_samples = 2 * buffer_size        
 
     def setup(self):
         self.sdr = adi.ad9361(uri=self.uri)
@@ -41,7 +40,6 @@ class sdrRx:
 
     def __exit__(self, *exc):
         self.close()
-
 
     def listen(self):
         window = np.array([], dtype=complex)
