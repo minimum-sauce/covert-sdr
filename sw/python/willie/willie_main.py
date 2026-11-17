@@ -5,10 +5,12 @@ from pathlib import Path
 import numpy as np
 
 from common.config import FS
-from willie.willie_rx import N, calibrate, setup_willie
+from willie.willie_rx import calibrate, setup_willie
 
 PRE_SECONDS = 0.5
 POST_SECONDS = 0.5
+MEASUREMENT_SAMPLES = 10_000
+AVERAGE_COUNT = 5
 CAPTURE_DIR = Path("willie_captures")
 
 
@@ -29,24 +31,29 @@ def _save_capture(samples, threshold, peak_power, trigger_index):
         threshold=threshold,
         peak_power=peak_power,
         trigger_index=trigger_index,
-        measurement_window_samples=N,
+        measurement_window_samples=MEASUREMENT_SAMPLES,
     )
     return path
 
 
 def main():
-    sdr = setup_willie()
+    sdr = setup_willie(buffer_size=MEASUREMENT_SAMPLES)
     measurements = 0
     captures = 0
     pre_sample_count = int(PRE_SECONDS * FS)
     post_sample_count = int(POST_SECONDS * FS)
-    pre_buffer = deque(maxlen=(pre_sample_count + N - 1) // N + 1)
+    pre_buffer = deque(
+        maxlen=(pre_sample_count + MEASUREMENT_SAMPLES - 1) // MEASUREMENT_SAMPLES + 1
+    )
+    power_history = deque(maxlen=AVERAGE_COUNT)
 
     try:
         CAPTURE_DIR.mkdir(parents=True, exist_ok=True)
-        threshold = calibrate(sdr)
+        threshold = calibrate(sdr, average=AVERAGE_COUNT)
         print(
             f"Willie listening; threshold: {threshold:.2f}; "
+            f"detection averages {AVERAGE_COUNT} x "
+            f"{MEASUREMENT_SAMPLES} samples; "
             f"captures will be saved in {CAPTURE_DIR}",
             flush=True,
         )
@@ -54,9 +61,15 @@ def main():
 
         while True:
             samples = _receive_samples(sdr)
-            power = float(np.mean(np.abs(samples) ** 2))
+            block_power = float(np.mean(np.abs(samples) ** 2))
+            power_history.append(block_power)
             measurements += 1
-            if power > threshold and armed:
+            average_power = (
+                float(np.mean(power_history))
+                if len(power_history) == AVERAGE_COUNT
+                else None
+            )
+            if average_power is not None and average_power > threshold and armed:
                 before = (
                     np.concatenate(pre_buffer)
                     if pre_buffer
@@ -66,8 +79,7 @@ def main():
                 capture = [before, samples]
                 pre_buffer.append(samples)
                 remaining = post_sample_count
-                peak_power = power
-                last_post_power = power
+                peak_power = block_power
 
                 while remaining > 0:
                     after = _receive_samples(sdr)
@@ -75,8 +87,8 @@ def main():
                     peak_power = max(peak_power, after_power)
                     capture.append(after)
                     remaining -= len(after)
-                    last_post_power = after_power
                     pre_buffer.append(after)
+                    power_history.append(after_power)
                     measurements += 1
 
                 captured_samples = np.concatenate(capture)
@@ -84,15 +96,19 @@ def main():
                     captured_samples, threshold, peak_power, len(before)
                 )
                 captures += 1
-                armed = last_post_power <= threshold
+                armed = (
+                    len(power_history) == AVERAGE_COUNT
+                    and np.mean(power_history) <= threshold
+                )
                 print(
                     f"Willie saved detection {captures}: {path} "
-                    f"(peak power {peak_power:.2f})",
+                    f"(average power {average_power:.2f}, "
+                    f"peak buffer power {peak_power:.2f})",
                     flush=True,
                 )
             else:
                 pre_buffer.append(samples)
-                if power <= threshold:
+                if average_power is not None and average_power <= threshold:
                     armed = True
     except KeyboardInterrupt:
         print(

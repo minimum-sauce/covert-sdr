@@ -26,10 +26,16 @@ def measure_power(sdr):
     return float(np.mean(np.abs(samples) ** 2))
 
 
-def calibrate(sdr, n=100, k=4):
-    noise = [measure_power(sdr) for _ in range(n)]
+def measure_average_power(sdr, count=1):
+    if count < 1:
+        raise ValueError("count must be at least 1")
+    return float(np.mean([measure_power(sdr) for _ in range(count)]))
+
+
+def calibrate(sdr, n=100, k=4, average=1):
+    noise = [measure_average_power(sdr, average) for _ in range(n)]
     return float(np.mean(noise) + k * np.std(noise))
 
 
-def detect(sdr, threshold):
-    return measure_power(sdr) > threshold
+def detect(sdr, threshold, average=1):
+    return measure_average_power(sdr, average) > threshold
