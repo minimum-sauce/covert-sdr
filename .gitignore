@@ -72,3 +72,5 @@ Testing/
 #Python
 __pycache__/
 *.pyc
+*.svg
+willie_captures

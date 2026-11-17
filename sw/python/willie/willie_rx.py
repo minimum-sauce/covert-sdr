@@ -1,12 +1,12 @@
 import numpy as np
 import adi
-from common.config import FS, SDR2_IP, FC
+from common.config import FS, SDR2_IP, SDR1_IP, FC
 
 N = 100000  # Default samples per power measurement
 
 def setup_willie(sdr=None, uri=None, buffer_size=N, rx_gain=20):
     if sdr is None:
-        sdr = adi.ad9361(uri=uri or f"ip:{SDR2_IP}")
+        sdr = adi.ad9361(uri=uri or f"ip:{SDR1_IP}")
 
     sdr.sample_rate = FS
     sdr.rx_lo = FC
@@ -26,7 +26,7 @@ def measure_power(sdr):
     return float(np.mean(np.abs(samples) ** 2))
 
 
-def calibrate(sdr, n=50, k=4):
+def calibrate(sdr, n=100, k=4):
     noise = [measure_power(sdr) for _ in range(n)]
     return float(np.mean(noise) + k * np.std(noise))
 
