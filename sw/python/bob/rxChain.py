@@ -10,7 +10,7 @@ def find_preamble(rx, filtered):
     best_metric = 0 
     best_start = None
 
-    for phase in range(rx.sps):
+    for phase in range(rx.sps): 
         symbols = filtered[phase::rx.sps]
 
         if len(symbols) < PREAMBLE_LEN:

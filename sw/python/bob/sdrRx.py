@@ -9,7 +9,7 @@ from bob.rxChain import process
 from bob.helper import read_samples
 
 class sdrRx:
-    def init(self, uri=SDR2_IP, buffer_size=65536):
+    def __init__(self, uri=SDR2_IP, buffer_size=65536):
         self.uri = uri
         self.buffer_size = buffer_size
         self.sps = FS // SYMBOL_RATE
@@ -36,10 +36,10 @@ class sdrRx:
             self.sdr.rx_destroy_buffer()
             self.sdr = None
 
-    def enter(self):
+    def __enter__(self):
         return self.setup()
 
-    def exit(self, *exc):
+    def __exit__(self, *exc):
         self.close()
 
 

@@ -2,7 +2,7 @@ from common.rrc import rrc_taps
 
 ## SDR IP addresses
 SDR1_IP = "192.168.1.10"
-SDR2_IP = "192.168.2.1"
+SDR2_IP = "ip:192.168.2.1"
 
 ## TX and RX common parameters
 FS = int(1e6)
@@ -23,3 +23,11 @@ PAYLOAD_BITS  = 1024         # Bits to send
 HEADER_BITS = 8
 MAX_PAYLOAD_BYTES = 128
 
+# Gold code generation
+STAGES = 7
+
+FEEDBACK_TAPS_1 = [7, 6] 
+INITIAL_STATE_1 = [1, 1, 1, 1, 1, 1, 1]
+
+FEEDBACK_TAPS_2 = [7, 3]
+INITIAL_STATE_2 = [1, 0, 1, 0, 1, 0, 1]
