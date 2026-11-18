@@ -24,13 +24,15 @@ def find_preamble(rx, filtered):
         metric = np.abs(corr) / (np.sqrt(energy * PREAMBLE_LEN) + 1e-12)
         peak = np.argmax(metric)
 
+        print(f"preamble metric={metric[peak]:.2f} at {peak}")
+        
         if metric[peak] > best_metric:
             best_metric = metric[peak]
             best_start = phase + peak * rx.sps
         
-    return best_start if best_metric >= 0.6 else None
+    return best_start if best_metric >= 0.8 else None
 
-
+    
 def decode_frame(rx, filtered, start):
     header_start = start + PREAMBLE_LEN * rx.sps
     header_end = header_start + HEADER_BITS * rx.sps
@@ -61,12 +63,12 @@ def decode_frame(rx, filtered, start):
     return demodulate(payload, MODULATION)
 
 
-DETECT_THRESH = 6.0  
+DETECT_THRESH = 3.0  
 
 def process(rx, window):
     L = len(SPREAD_CODE)
     filtered = matched_filter(window - np.mean(window), rx.taps)
-
+    
     off, _, score = find_code(filtered, sps=rx.sps, return_info=True)
     print(f"code score={score:.1f}  offset={off}")          
     
@@ -75,7 +77,7 @@ def process(rx, window):
  
     chips = filtered[off::rx.sps]
     symbols = despread_symbols(chips)                        
-
+   
     rx1 = SimpleNamespace(**{**vars(rx), "sps": 1})
     start = find_preamble(rx1, symbols)
     

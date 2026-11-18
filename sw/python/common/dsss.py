@@ -21,10 +21,13 @@ def spread_symbols(symbols):
 
 def despread_symbols(received_chips):
     code_length = len(SPREAD_CODE)
-    despread_chips = received_chips * np.tile(SPREAD_CODE, len(received_chips) // code_length)
-    symbols = despread_chips.reshape(-1, code_length).sum(axis=1)
+    n = len(received_chips) // code_length
+    received_chips = received_chips[: n * code_length]     
 
-    return (symbols > 0).astype(int)
+    despread_chips = received_chips * np.tile(SPREAD_CODE, n)
+    symbols = despread_chips.reshape(-1, code_length).sum(axis=1) / code_length
+
+    return symbols
 
 
 def find_code(filtered, sps=10, return_info=False):

@@ -1,6 +1,6 @@
 import numpy as np
 import adi
-from common.config import SDR1_IP, FC
+from common.config import SDR1_IP, FC, SDR2_IP
 from alice.settings import FS, TX_GAIN
 from alice.scenarios.send_message import MESSAGE, build_message_samples
 from alice.sdr_tx import SdrTx
@@ -8,19 +8,17 @@ from bob.helper import bits_to_text
 from bob.sdrRx import sdrRx
 
 def main():
-    dev = adi.ad9361(uri=f"ip:{SDR1_IP}")
+    dev = adi.ad9361(uri=SDR2_IP)
     dev.tx_enabled_channels = [0]
     dev.rx_enabled_channels = [0]
     dev.loopback = 0
 
     samples = build_message_samples(MESSAGE)
 
-    rx = sdrRx()
-    rx.init(uri=f"ip:{SDR1_IP}", buffer_size=2 * len(samples))
-    rx.setup()
-
+    rx = sdrRx().setup()
+   
     try:
-        with SdrTx(SDR1_IP, FC, FS, TX_GAIN, sdr=dev) as tx:
+        with SdrTx(SDR2_IP, FC, FS, TX_GAIN, sdr=dev) as tx:
             tx.send(samples, cyclic=True)
             print(
                 f"Sending {MESSAGE!r} continuously | TX buffer {getattr(dev, '_tx_buffer_size', '?')} | "

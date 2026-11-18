@@ -6,7 +6,7 @@ class SdrTx:
     def __init__(self, ip: str, fc: int, fs: int, gain: int, sdr=None):
         if gain > 0:
             raise ValueError("TX gain is 0 dB at most")
-        self.sdr = sdr if sdr is not None else adi.Pluto(uri=f"ip:{ip}")
+        self.sdr = sdr if sdr is not None else adi.Pluto(uri=ip)
         self.sdr.tx_lo = int(fc)
         self.sdr.sample_rate = int(fs)
         self.sdr.tx_rf_bandwidth = int(fs)

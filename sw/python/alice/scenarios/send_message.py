@@ -3,7 +3,7 @@ from alice.framing import text_to_bits, build_packet
 from alice.tx_chain import to_samples
 from alice.runner import transmit
 
-MESSAGE = "Hello gustav"
+MESSAGE = "Hello"
 CYCLIC  = True
 
 def build_message_samples(message=MESSAGE):
