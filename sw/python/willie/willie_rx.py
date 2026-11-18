@@ -4,7 +4,7 @@ from common.config import FS, SDR2_IP, SDR1_IP, FC
 
 N = 100000  # Default samples per power measurement
 
-def setup_willie(sdr=None, uri=None, buffer_size=N, rx_gain=20):
+def setup_willie(sdr=None, uri=None, buffer_size=N, rx_gain=-10):
     if sdr is None:
         sdr = adi.ad9361(uri=uri or f"ip:{SDR1_IP}")
 
@@ -16,6 +16,8 @@ def setup_willie(sdr=None, uri=None, buffer_size=N, rx_gain=20):
     sdr.rx_cyclic_buffer = False
     sdr.gain_control_mode_chan0 = "manual"
     sdr.rx_hardwaregain_chan0 = rx_gain
+    sdr.rx_quadrature_tracking_en_chan0 = True   # on some pyadi-iio versions: rx_quadrature_tracking_en_chan0
+    sdr.rx_rf_dc_offset_tracking_en_chan0 = True # property names vary by version
     return sdr
 
 

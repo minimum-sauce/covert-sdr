@@ -10,6 +10,7 @@ class SdrTx:
         self.sdr.tx_lo = int(fc)
         self.sdr.sample_rate = int(fs)
         self.sdr.tx_rf_bandwidth = int(fs)
+        self.sdr.tx_enabled_channels = [0]
         self.sdr.tx_hardwaregain_chan0 = gain
         self._active = False
 

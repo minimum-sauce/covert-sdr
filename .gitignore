@@ -74,3 +74,5 @@ __pycache__/
 *.pyc
 *.svg
 willie_captures
+
+graphs
