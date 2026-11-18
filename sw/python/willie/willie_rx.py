@@ -32,7 +32,7 @@ def measure_average_power(sdr, count=1):
     return float(np.mean([measure_power(sdr) for _ in range(count)]))
 
 
-def calibrate(sdr, n=100, k=4, average=1):
+def calibrate(sdr, n=100, k=10, average=1):
     noise = [measure_average_power(sdr, average) for _ in range(n)]
     return float(np.mean(noise) + k * np.std(noise))
 

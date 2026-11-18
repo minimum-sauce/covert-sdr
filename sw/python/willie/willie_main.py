@@ -14,16 +14,20 @@ AVERAGE_COUNT = 5
 CAPTURE_DIR = Path("willie_captures")
 
 
-def _receive_samples(sdr):
+def receive_samples(sdr):
     samples = np.asarray(sdr.rx(), dtype=np.complex64)
     if samples.ndim > 1:
         samples = samples[0]
     return samples
 
 
-def _save_capture(samples, threshold, peak_power, trigger_index):
+def save_capture(
+    samples, threshold, peak_power, trigger_index, capture_dir=CAPTURE_DIR
+):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    path = CAPTURE_DIR / f"willie_{timestamp}.npz"
+    capture_dir = Path(capture_dir)
+    capture_dir.mkdir(parents=True, exist_ok=True)
+    path = capture_dir / f"willie_{timestamp}.npz"
     np.savez_compressed(
         path,
         iq=samples,
@@ -60,7 +64,7 @@ def main():
         armed = True
 
         while True:
-            samples = _receive_samples(sdr)
+            samples = receive_samples(sdr)
             block_power = float(np.mean(np.abs(samples) ** 2))
             power_history.append(block_power)
             measurements += 1
@@ -82,7 +86,7 @@ def main():
                 peak_power = block_power
 
                 while remaining > 0:
-                    after = _receive_samples(sdr)
+                    after = receive_samples(sdr)
                     after_power = float(np.mean(np.abs(after) ** 2))
                     peak_power = max(peak_power, after_power)
                     capture.append(after)
@@ -92,7 +96,7 @@ def main():
                     measurements += 1
 
                 captured_samples = np.concatenate(capture)
-                path = _save_capture(
+                path = save_capture(
                     captured_samples, threshold, peak_power, len(before)
                 )
                 captures += 1
