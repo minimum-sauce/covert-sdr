@@ -1,10 +1,13 @@
 import numpy as np
 
+from types import SimpleNamespace
 from common.config import PREAMBLE_LEN, HEADER_BITS, MAX_PAYLOAD_BYTES, MODULATION
 from common.rrc import matched_filter
 from common.modulation import demodulate
 from common.dsp import bits_to_int
 from bob.helper import symbols_samples
+from common.dsss import despread_symbols, find_code, SPREAD_CODE
+
 
 def find_preamble(rx, filtered):
     best_metric = 0 
@@ -58,11 +61,25 @@ def decode_frame(rx, filtered, start):
     return demodulate(payload, MODULATION)
 
 
-def process(rx, window):
-    filtered = matched_filter(window - np.mean(window), rx.taps)
-    start = find_preamble(rx, filtered)
+DETECT_THRESH = 6.0  
 
+def process(rx, window):
+    L = len(SPREAD_CODE)
+    filtered = matched_filter(window - np.mean(window), rx.taps)
+
+    off, _, score = find_code(filtered, sps=rx.sps, return_info=True)
+    print(f"code score={score:.1f}  offset={off}")          
+    
+    if score < DETECT_THRESH:
+        return None
+ 
+    chips = filtered[off::rx.sps]
+    symbols = despread_symbols(chips)                        
+
+    rx1 = SimpleNamespace(**{**vars(rx), "sps": 1})
+    start = find_preamble(rx1, symbols)
+    
     if start is None:
         return None
     
-    return decode_frame(rx, filtered, start)
+    return decode_frame(rx1, symbols, start)
