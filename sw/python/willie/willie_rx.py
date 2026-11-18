@@ -19,11 +19,8 @@ def setup_willie(sdr=None, uri=None, buffer_size=N, rx_gain=20):
     return sdr
 
 
-def measure_power(sdr):
-    samples = np.asarray(sdr.rx(), dtype=complex)
-    if samples.ndim > 1:
-        samples = samples[0]
-    return float(np.mean(np.abs(samples) ** 2))
+def measure_power(x):
+    return float(np.mean(np.abs(x) ** 2))
 
 
 def measure_average_power(sdr, count=1):
@@ -38,4 +35,4 @@ def calibrate(sdr, n=100, k=10, average=1):
 
 
 def detect(sdr, threshold, average=1):
-    return measure_average_power(sdr, average) > threshold
+    return measure_power(sdr) > threshold

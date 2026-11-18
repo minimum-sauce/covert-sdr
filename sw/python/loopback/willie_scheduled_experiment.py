@@ -1,4 +1,4 @@
-from willie.willie_rx import setup_willie, calibrate
+from willie.willie_rx import setup_willie, calibrate, detect, measure_power
 from alice.sdr_tx import SdrTx
 from common.config import FS, SDR1_IP, FC
 import adi
@@ -23,6 +23,17 @@ def start_willie(device):
 def willie_worker(willie, threshold, pre_buffers=4, post_buffers=4):
     # Worker function for handling Willie's operations
     ring = deque(maxlen=pre_buffers)
+    recording, quiet, rec = False, 0, []
+    while not stop.is_set():
+        x = willie.rx()
+        hit = measure_power(x) > threshold
+        if not recording:
+            ring.append(x)
+            if hit:
+                print("Willie: FLAG")
+                recording, quiet = True, 0
+                rec = list(ring)
+
     pass
 
 
