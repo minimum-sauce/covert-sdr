@@ -26,7 +26,7 @@ def measure_power(x):
 def measure_average_power(sdr, count=1):
     if count < 1:
         raise ValueError("count must be at least 1")
-    return float(np.mean([measure_power(sdr) for _ in range(count)]))
+    return float(np.mean([measure_power(sdr.rx()) for _ in range(count)]))
 
 
 def calibrate(sdr, n=100, k=10, average=1):
@@ -34,5 +34,3 @@ def calibrate(sdr, n=100, k=10, average=1):
     return float(np.mean(noise) + k * np.std(noise))
 
 
-def detect(sdr, threshold, average=1):
-    return measure_power(sdr) > threshold
