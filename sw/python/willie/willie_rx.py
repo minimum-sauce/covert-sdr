@@ -1,12 +1,12 @@
 import numpy as np
 import adi
-from common.config import FS, SDR2_IP, FC
+from common.config import FS, SDR2_IP, SDR1_IP, FC
 
 N = 100000  # Default samples per power measurement
 
-def setup_willie(sdr=None, uri=None, buffer_size=N, rx_gain=20):
+def setup_willie(sdr=None, uri=None, buffer_size=N, rx_gain=-10):
     if sdr is None:
-        sdr = adi.ad9361(uri=uri or f"ip:{SDR2_IP}")
+        sdr = adi.ad9361(uri=uri or f"ip:{SDR1_IP}")
 
     sdr.sample_rate = FS
     sdr.rx_lo = FC
@@ -16,20 +16,23 @@ def setup_willie(sdr=None, uri=None, buffer_size=N, rx_gain=20):
     sdr.rx_cyclic_buffer = False
     sdr.gain_control_mode_chan0 = "manual"
     sdr.rx_hardwaregain_chan0 = rx_gain
+    sdr.rx_quadrature_tracking_en_chan0 = True   # on some pyadi-iio versions: rx_quadrature_tracking_en_chan0
+    sdr.rx_rf_dc_offset_tracking_en_chan0 = True # property names vary by version
     return sdr
 
 
-def measure_power(sdr):
-    samples = np.asarray(sdr.rx(), dtype=complex)
-    if samples.ndim > 1:
-        samples = samples[0]
-    return float(np.mean(np.abs(samples) ** 2))
+def measure_power(x):
+    return float(np.mean(np.abs(x) ** 2))
 
 
-def calibrate(sdr, n=50, k=4):
-    noise = [measure_power(sdr) for _ in range(n)]
+def measure_average_power(sdr, count=1):
+    if count < 1:
+        raise ValueError("count must be at least 1")
+    return float(np.mean([measure_power(sdr.rx()) for _ in range(count)]))
+
+
+def calibrate(sdr, n=100, k=10, average=1):
+    noise = [measure_average_power(sdr, average) for _ in range(n)]
     return float(np.mean(noise) + k * np.std(noise))
 
 
-def detect(sdr, threshold):
-    return measure_power(sdr) > threshold
