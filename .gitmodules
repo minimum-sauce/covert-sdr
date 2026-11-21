@@ -1,0 +1,3 @@
+[submodule "antsdr-fw"]
+	path = antsdr-fw
+	url = git@github.com:minimum-sauce/antsdr-fw-patch.git
