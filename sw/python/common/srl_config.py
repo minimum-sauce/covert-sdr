@@ -4,7 +4,7 @@ MODE = 'srl' # Or srl
 N_SWEEP = [20_000, 80_000, 320_000, 1_280_000] # How many channel uses to test
 
 # SRL parameters
-N_REF = 20,000
+N_REF = 20000
 A_REF = 3000
 K_REF = 16
 
