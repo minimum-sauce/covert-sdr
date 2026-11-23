@@ -5,8 +5,8 @@ def read_samples(radio):
     return samples[0] if samples.ndim > 1 else samples
 
 
-def symbols_samples(sdr, filtered, start, first, count):
-    indices = start + (first + np.arange(count)) * sdr.sps
+def symbols_samples(filtered, start, first, count, sps):
+    indices = start + (first + np.arange(count)) * sps
     return filtered[indices]
 
 

@@ -1,13 +1,14 @@
 from common.rrc import rrc_taps
 
 ## SDR IP addresses
-SDR1_IP = "192.168.1.10"
+SDR1_IP = "ip:192.168.1.10"
 SDR2_IP = "ip:192.168.2.1"
 
 ## TX and RX common parameters
 FS = int(1e6)
 FC = int(868e6)# 868Mhz
 SYMBOL_RATE   = 100_000      # symbols/s
+SPS = FS // SYMBOL_RATE
 
 HEADER_BITS = 8
 
@@ -31,3 +32,10 @@ INITIAL_STATE_1 = [1, 1, 1, 1, 1, 1, 1]
 
 FEEDBACK_TAPS_2 = [7, 3]
 INITIAL_STATE_2 = [1, 0, 1, 0, 1, 0, 1]
+
+
+# DSSS parameters
+USE_DSSS = True              
+CHIP_RATE = 100_000          
+SPC = FS // CHIP_RATE 
+DETECT_THRESH = 3.0  
