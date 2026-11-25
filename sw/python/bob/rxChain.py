@@ -15,7 +15,7 @@ def find_preamble(rx, filtered, sps):
 
     for phase in range(sps):
         symbols = filtered[phase::sps]
-
+        
         if len(symbols) < PREAMBLE_LEN:
             continue
 
@@ -28,7 +28,7 @@ def find_preamble(rx, filtered, sps):
             best_metric = metric[peak]
             best_start = phase + peak * sps
 
-    print(f"preamble metric={best_metric:.2f}")
+    #print(f"preamble metric={best_metric:.2f}")
     return best_start if best_metric >= 0.8 else None
 
 
@@ -64,8 +64,8 @@ def process(rx, window):
     filtered = matched_filter(window - np.mean(window), rx.taps)
 
     if USE_DSSS:
-        off, _, score = find_code(filtered, sps=rx.spc, return_info=True)
-        print(f"code score={score:.1f}  offset={off}")
+        off, score = find_code(filtered, rx.spc, return_info=True)
+        #print(f"code score={score:.1f}  offset={off}")
 
         if score < DETECT_THRESH:
             return None

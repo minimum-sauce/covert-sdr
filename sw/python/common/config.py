@@ -38,4 +38,4 @@ INITIAL_STATE_2 = [1, 0, 1, 0, 1, 0, 1]
 USE_DSSS = True              
 CHIP_RATE = 100_000          
 SPC = FS // CHIP_RATE 
-DETECT_THRESH = 3.0  
+DETECT_THRESH = 1.7  

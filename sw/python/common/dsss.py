@@ -12,7 +12,7 @@ SEQ2 = gen_mls(STAGES, FEEDBACK_TAPS_2, INITIAL_STATE_2)
 
 GOLD_CODE = gen_gold_codes(STAGES, SEQ1, SEQ2)[2]
 SPREAD_CODE = modulate(GOLD_CODE, "BPSK")
-
+CODE_LEN = len(SPREAD_CODE)
 
 def spread_symbols(symbols):
     repeated_symbols = np.repeat(symbols, len(SPREAD_CODE))
@@ -20,33 +20,35 @@ def spread_symbols(symbols):
 
 
 def despread_symbols(received_chips):
-    code_length = len(SPREAD_CODE)
-    n = len(received_chips) // code_length
-    received_chips = received_chips[: n * code_length]     
+    n = len(received_chips) // CODE_LEN
+    received_chips = received_chips[: n * CODE_LEN]     
 
     despread_chips = received_chips * np.tile(SPREAD_CODE, n)
-    symbols = despread_chips.reshape(-1, code_length).sum(axis=1) / code_length
+    symbols = despread_chips.reshape(-1, CODE_LEN).sum(axis=1) / CODE_LEN
 
     return symbols
 
 
-def find_code(filtered, sps=10, return_info=False):
-    best_score, best_off = -1.0, 0
-    L = len(SPREAD_CODE)
-
-    for p in range(sps):                      
-        chips = filtered[p::sps]
+def find_code(filtered, spc, return_info=False):
+    best_score = -1.0 
+    best_off = 0
+  
+    for p in range(spc):                      
+        chips = filtered[p::spc]
         corr = np.correlate(chips, SPREAD_CODE, mode="valid")
-        n_periods = len(corr) // L
+        n_periods = len(corr) // CODE_LEN
+        
         if n_periods == 0:
             continue
-        metric = np.abs(corr[: n_periods * L]).reshape(n_periods, L).sum(axis=0)
+        
+        metric = np.abs(corr[: n_periods * CODE_LEN]).reshape(n_periods, CODE_LEN).sum(axis=0)
         k = int(np.argmax(metric))
         score = metric[k] / np.mean(metric)
+        
         if score > best_score:
-            best_score, best_off = score, p + k * sps   
+            best_score, best_off = score, p + k * spc   
 
     if return_info:
-        return best_off, 0.0, best_score     
+        return best_off, best_score     
      
     return best_off

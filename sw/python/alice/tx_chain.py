@@ -1,9 +1,9 @@
 import numpy as np
-from common.config import SYMBOL_RATE, MODULATION, ROLLOFF, FS
+from common.config import SYMBOL_RATE, MODULATION, ROLLOFF, FS, RRC_SPAN, USE_DSSS
 from common.modulation import modulate
 from common.rrc import rrc_taps, pulse_shape
 from common.dsss import spread_symbols, SPREAD_CODE      # or spread_symbols, if you renamed it
-from alice.settings import RRC_SPAN, DAC_SCALE, GAP_SYMBOLS
+from alice.settings import DAC_SCALE, GAP_SYMBOLS
 
 def to_samples(packet_bits: np.ndarray, fs: int, gap_symbols: int = GAP_SYMBOLS) -> np.ndarray:
     if fs % SYMBOL_RATE != 0:
@@ -11,9 +11,13 @@ def to_samples(packet_bits: np.ndarray, fs: int, gap_symbols: int = GAP_SYMBOLS)
     sps = FS // SYMBOL_RATE
 
     symbols = modulate(packet_bits, MODULATION)
-    chips   = spread_symbols(symbols)
     taps    = rrc_taps(beta=ROLLOFF, span=RRC_SPAN, sps=sps)
-    shaped  = pulse_shape(chips, taps, sps)
+    
+    if USE_DSSS: 
+        chips   = spread_symbols(symbols)   
+        shaped  = pulse_shape(chips, taps, sps)
+    else:
+        shaped  = pulse_shape(symbols, taps, sps)
 
     gap = np.zeros(gap_symbols * sps, dtype=complex)
     samples = np.concatenate([gap, shaped, gap])

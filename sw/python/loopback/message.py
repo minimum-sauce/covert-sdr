@@ -1,7 +1,7 @@
 import numpy as np
 import adi
-from common.config import SDR1_IP, FC, SDR2_IP
-from alice.settings import FS, TX_GAIN
+from common.config import SDR1_IP, FC, SDR2_IP, FS
+from alice.settings import TX_GAIN
 from alice.scenarios.send_message import MESSAGE, build_message_samples
 from alice.sdr_tx import SdrTx
 from bob.helper import bits_to_text
